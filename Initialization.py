@@ -18,6 +18,7 @@ def main():
     tau_max = json_file["tau_max"]
     delta_tau = json_file["delta_tau"]
     device = json_file["device"]
+    group_atta = json_file["group_atta"]
     #==================================================
 
     #==================================================
@@ -86,7 +87,7 @@ def main():
         sequ_tau.append(sequ_tau[len(sequ_tau)-1] + delta_tau)
     #==================================================
 
-    return sequ_t, sequ_tau, dyn.f, dyn.Jf, dyn.model_name, dyn.information, initial_val, loc_rem, delta_t, delta_tau, device
+    return sequ_t, sequ_tau, dyn.f, dyn.Jf, dyn.model_name, dyn.information, initial_val, loc_rem, delta_t, delta_tau, device, group_atta
 
 
 if __name__ == '__main__':

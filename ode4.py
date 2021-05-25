@@ -14,7 +14,7 @@ class ode4(nn.Module):
                 function, 
                 time_sequ,
                 time_delta,
-                debug,
+                debug = False,
                 device = "cuda"):
         super(ode4, self).__init__()
         self.function = function
