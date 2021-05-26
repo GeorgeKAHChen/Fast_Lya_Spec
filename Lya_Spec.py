@@ -115,12 +115,14 @@ class Lya_Spec(nn.Module):
             Lya_Spec.append(torch.DoubleTensor([0.0 for n in range(self.size_tensor)]))
             
         for kase in range(0, len(input)):
+            if kase % 1000 == 0:
+                print(kase, len(input), end = "\r")
             eye = self.mat_times(input[kase], eye)
             eye = self.gram_schmidt(eye) 
             eye, norm = self.normalization(eye)
             for i in range(0, self.len_var):
                 Lya_Spec[i] = (Lya_Spec[i] * (kase) + torch.log(norm[i])) / (kase + 1)
-
+        print(len(input), len(input))
         return Lya_Spec
 
 

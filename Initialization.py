@@ -43,12 +43,13 @@ def main():
 
     #==================================================
     # Check model
-    from torch import DoubleTensor 
+    from torch import DoubleTensor
     initial_val = []
     try:
         dyn_init = dyn.call_init()
         for i in range(0, len(dyn_init)):
-            initial_val.append(DoubleTensor([dyn_init[i]]))
+            initial_val.append([dyn_init[i]])
+        initial_val = DoubleTensor(initial_val)
     except:
         print("MODEL ERROR: Model files should include a 'initial_val' as the initial value of the system.")
         sys.exit(0)

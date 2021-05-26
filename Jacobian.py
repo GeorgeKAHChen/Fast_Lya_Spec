@@ -24,6 +24,8 @@ class Jacobian(nn.Module):
     def forward(self, input):
         Vals = []
         for kase in range(0, len(input)):
+            if kase % 1000 == 0:
+                print(kase, len(input), end = "\r")
             input_x = input[kase]
             output = self.function(input_x, self.time_delta)
             final =[]
@@ -36,6 +38,7 @@ class Jacobian(nn.Module):
                     final.append(output[i])
 
             Vals.append(final)
+        print(len(input), len(input))
         return Vals
 
 

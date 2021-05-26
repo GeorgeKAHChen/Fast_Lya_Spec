@@ -8,16 +8,16 @@
     // t_rem should lower than t_max
     // and the time sequence greater than t_rem lower than t_max 
     // will be used to calculate the LE
-    "t_max":1900,
-    "t_rem":1800,
-    "delta_t":1e-4,
+    "t_max":500,
+    "t_rem":99.5,
+    "delta_t":1e-2,
     // PARAMETER: group attractor: how long the sub-attractor will be calculate in one loop
     // = positive int, -1 means infinity
     "group_atta": 10000,
     // PARAMETER: time tau sequence
     // The Initial of tau always be 0
-    "tau_max":1e-4,
-    "delta_tau": 1e-5,
+    "tau_max":1e-3,
+    "delta_tau": 1e-4,
     // device = "cpu" for cpu based computing or "cuda" for NVIDIA gpu based computin
     "device": "cpu"
 }

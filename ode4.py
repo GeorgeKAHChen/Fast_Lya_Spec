@@ -26,6 +26,8 @@ class ode4(nn.Module):
     def forward(self, input):
         Vals = [input]
         for kase in range(0, len(self.time_sequ)):
+            if kase % 1000 == 0:
+                print(kase, len(self.time_sequ), end = "\r")
             curr_x = Vals[len(Vals) - 1]
             curr_t = self.time_sequ[kase]
             k1 = self.function(curr_x, curr_t)
@@ -46,7 +48,9 @@ class ode4(nn.Module):
                 new_x.append(curr_x[i] + self.time_delta * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) * (1/6)) 
             if self.debug:
                 continue
-            Vals.append(new_x)
+            Vals.append(torch.stack(new_x))
+
+        print(len(self.time_sequ), len(self.time_sequ))
         return Vals
 
 
