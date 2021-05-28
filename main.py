@@ -12,8 +12,13 @@ import torch
 import ode4
 import Jacobian
 import Lya_Spec
+import Lya_Spec_with_Jaco
+import Ori_Lya_Spec
 import Initialization
 from libpy import Init
+
+torch.set_num_threads(12)
+DEBUG = False
 
 class FLS(nn.Module):
     def __init__(self, f, Jf, sequ_t, sequ_tau, delta_t, delta_tau, len_var, loc_rem, device):
@@ -67,23 +72,23 @@ class FLS(nn.Module):
 class Multi_init_FLS(nn.Module):
     def __init__(self, f, Jf, sequ_t, delta_t, len_var, device):
         super(Multi_init_FLS, self).__init__()
-        self.attractor = ode4.ode4(function = f, time_sequ = sequ_t, time_delta = delta_t, device = device)
-        self.Jacobian = Jacobian.Jacobian(function = Jf, time_delta = delta_t, device = device)
-        self.Lya_Spec = Lya_Spec.Lya_Spec(time_delta = delta_t, len_var = len_var, device = device)
+        #self.attractor = ode4.ode4(function = f, time_sequ = sequ_t, time_delta = delta_t, device = device)
+        #self.Jacobian = Jacobian.Jacobian(function = Jf, time_delta = delta_t, device = device)
+        #self.Lya_Spec = Lya_Spec.Lya_Spec(time_delta =  delta_t, len_var = len_var, device = device)
+        self.Lya_Spec = Ori_Lya_Spec.Ori_Lya_Spec(time_delta =  delta_t, len_var = len_var, device = device, Jfunc = Jf, func = f, time_sequ = sequ_t)
 
 
     def forward(self, input_x):
-        print("Attractor computing")
-        Block = self.attractor(input_x)
-        print(Block[0])
-        print(len(Block), Block[0].size())
+        #print("Attractor computing")
+        #Block = self.attractor(input_x)
+        #print(len(Block), Block[0].size())
 
-        print("Jacobian computing")
-        Block = self.Jacobian(Block)
-        print(len(Block), len(Block[0]), Block[0][0].size())
+        #print("Jacobian computing")
+        #Block = self.Jacobian(Block)
+        #print(len(Block), len(Block[0]), Block[0][0].size())
 
-        print("Lyapunov Spectrum computing")
-        Block = self.Lya_Spec(Block)
+        print("Jacobian and Lyapunov Spectrum computing")
+        Block = self.Lya_Spec(input_x)
         print(len(Block), Block[0].size())
 
         for kase in range(0, len(Block)):
@@ -118,28 +123,53 @@ def main():
     # =======================================================
     
     # Generate initial values
-    import random
-    new_val = []
-    for i in range(0, len(initial_val)):
-        tensor_vec = []
-        for j in range(0, 5000):    
-            tensor_vec.append(random.random())
-        new_val.append(torch.DoubleTensor(tensor_vec))
-    initial_val = torch.stack(new_val)
     model = Multi_init_FLS(f, Jf, sequ_t, delta_t, len(initial_val), device).to(device)
     print(model)
-    
-    # Calculate the LE
-    output = model(initial_val)
-    
+    for kase in range(0, 10):
+        import random
+        new_val = []
+        for i in range(0, len(initial_val)):
+            tensor_vec = []
+            for j in range(0, 100):    
+                tensor_vec.append(random.random())
+            new_val.append(torch.DoubleTensor(tensor_vec))
+        initial_val = torch.stack(new_val)
+        
+        # Calculate the LE
+
+        output = model(initial_val)
+        #output = output.tolist()
+        #for i in range(0, len(output)):
+        #    output[i] = output[i].tolist()
+        
+
+
+
+        """
+        import numpy as np
+        import matplotlib.pyplot as plt
+        from scipy.integrate import odeint
+        from mpl_toolkits.mplot3d import Axes3D
+
+        x = []
+        y = []
+        z = []
+        for i in range(0, len(output)):
+            output[i] = output[i].tolist()
+            x.append(output[i][0][0])
+            y.append(output[i][1][0])
+            z.append(output[i][2][0])
+
+        fig = plt.figure()
+        ax = fig.gca(projection="3d")
+        ax.plot(x, y, z, color = "black")
+        plt.draw()
+        plt.show()
+        plt.savefig(str(Init.GetTime()) + ".png")
+        """
     # =======================================================
 
-    """
-    for i in range(0, len(output)):
-        output[i] = output[i].tolist()
-    Init.ArrOutput(output)
-    """
-    print(output)
+    #print(output)
     
     return 
 

@@ -64,7 +64,8 @@ def main():
         print("MODEL ERROR: Model files should include a 'Jf' function to computing the Jacobian matrix of the system.")
         sys.exit(0)
     try:
-        print(dyn.call_info)
+        print("model information")
+        print(dyn.call_info()[0], dyn.call_info()[1])
     except:
         print("MODEL ERROR: model should include a model_name and a information string")
         sys.exit(0)

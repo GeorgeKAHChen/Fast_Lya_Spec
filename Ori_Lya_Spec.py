@@ -2,25 +2,30 @@
 #
 #       Fast Lyapunov Spectrum
 #
-#       Lya_Spec.py
+#       Ori_Lya_Spec.py
 #
 #==================================================
 
 import torch
 import torch.nn as nn
 
-class Lya_Spec(nn.Module):
+class Ori_Lya_Spec(nn.Module):
     def __init__(self, 
                 time_delta,
                 len_var,
+                Jfunc,
+                func,
+                time_sequ,
                 debug = False,
                 device = "cuda"):
-        super(Lya_Spec, self).__init__()
+        super(Ori_Lya_Spec, self).__init__()
         self.time_delta = time_delta
         self.len_var = len_var
         self.debug = debug
         self.device = device
-
+        self.func = func
+        self.Jfunc = Jfunc
+        self.time_sequ = time_sequ
         self.len_jaco = 0
         self.size_tensor = 0
         self.multi_table = []
@@ -96,11 +101,52 @@ class Lya_Spec(nn.Module):
 
 
 
+    def Jacobian(self, x):
+        Vals = []
+
+        output = self.Jfunc(x, self.time_delta)
+        final =[]
+        for i in range(len(output)):
+            try:
+                len(output[i])
+            except:
+                final.append(torch.DoubleTensor([output[i] for n in range(len(x[0]))]))
+            else:
+                final.append(output[i])
+
+        Vals.append(final)
+        #print(len(x), len(x))
+        return Vals
+
+
+
+    def ode4(self, curr_x, curr_t):
+        k1 = self.func(curr_x, curr_t)
+        k2 = []
+        for i in range(0, len(curr_x)):
+            k2.append(curr_x[i] + self.time_delta * 0.5 * k1[i]) 
+        k2 = self.func(k2, curr_t + self.time_delta * 0.5)
+        k3 = []
+        for i in range(0, len(curr_x)):
+            k3.append(curr_x[i] + self.time_delta * 0.5 * k2[i]) 
+        k3 = self.func(k3, curr_t + self.time_delta * 0.5)
+        k4 = []
+        for i in range(0, len(curr_x)):
+            k4.append(curr_x[i] + self.time_delta * k2[i]) 
+        k4 = self.func(k4, curr_t + self.time_delta)
+        new_x = []
+        for i in range(0, len(curr_x)):
+            new_x.append(curr_x[i] + self.time_delta * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) * (1/6)) 
+        return new_x
+
+
+
+
     def forward(self, input):
-        self.len_jaco = len(input[0])
-        self.size_tensor = len(input[0][0])
+        self.len_jaco = len(input) * len(input)
+        self.size_tensor = len(input[0])
         self.init_cal_table()
-        #print(self.multi_table)
+
         eye = []
         is_one = 0
         for i in range(0, self.len_jaco):
@@ -114,27 +160,19 @@ class Lya_Spec(nn.Module):
         for i in range(0, self.len_var):
             Lya_Spec.append(torch.DoubleTensor([0.0 for n in range(self.size_tensor)]))
         
-        for kase in range(0, len(input)):
+        input_x = input
+        for kase in range(0, len(self.time_sequ)):
             if kase % 1000 == 0:
-                print(kase, len(input), end = "\r")
-            #print("=========================== eye 1")
-            #print(eye)
-            #print("=========================== inp 1")
-            #print(input[kase])
-            eye = self.mat_times(input[kase], eye)
-            #print("=========================== inp*eye")
-            #print(eye)
+                print(kase, len(self.time_sequ), end = "\r")
+            input_x = self.ode4(input_x, self.time_sequ[kase])
+            Jaco = self.Jacobian(input_x)[0]
+            eye = self.mat_times(Jaco, eye)
             eye = self.gram_schmidt(eye) 
-            #print("=========================== gs(eye)")
-            #print(eye)
             eye, norm = self.normalization(eye)
-            #print("=========================== normalization eye")
-            #print(eye)
-            #print("=========================== norm")
-            #print(norm)
             for i in range(0, self.len_var):
                 Lya_Spec[i] = (Lya_Spec[i] * (kase*self.time_delta) + torch.log(norm[i])) / ((kase + 1)*self.time_delta)
-        print(len(input), len(input))
+            
+        print(len(self.time_sequ), len(self.time_sequ))
         return Lya_Spec
 
 
