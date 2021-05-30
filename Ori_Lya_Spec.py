@@ -86,26 +86,26 @@ class Ori_Lya_Spec(nn.Module):
         return x_ret
 
 
+
     def normalization(self, x):
         norm_para = []
         for i in range(0, self.len_var):
             vec = torch.DoubleTensor([0 for n in range(self.size_tensor)])
             for j in range(0, self.len_var):
-                vec += x[i * self.len_var + j] * x[i * self.len_var + j]
+                #print(x[i * self.len_var + j].tolist())
+                vec += torch.abs(x[i * self.len_var + j] * x[i * self.len_var + j])
             vec = torch.sqrt(vec)
             norm_para.append(vec)
             for j in range(0, self.len_var):
                 x[i * self.len_var + j] /= vec
-
         return x, norm_para
 
 
 
     def Jacobian(self, x):
         Vals = []
-
         output = self.Jfunc(x, self.time_delta)
-        final =[]
+        final = []
         for i in range(len(output)):
             try:
                 len(output[i])
@@ -115,7 +115,6 @@ class Ori_Lya_Spec(nn.Module):
                 final.append(output[i])
 
         Vals.append(final)
-        #print(len(x), len(x))
         return Vals
 
 
@@ -161,19 +160,22 @@ class Ori_Lya_Spec(nn.Module):
             Lya_Spec.append(torch.DoubleTensor([0.0 for n in range(self.size_tensor)]))
         
         input_x = input
+        output_x = []
         for kase in range(0, len(self.time_sequ)):
             if kase % 1000 == 0:
                 print(kase, len(self.time_sequ), end = "\r")
+            #print(Lya_Spec, end = "\r")
             input_x = self.ode4(input_x, self.time_sequ[kase])
             Jaco = self.Jacobian(input_x)[0]
             eye = self.mat_times(Jaco, eye)
-            eye = self.gram_schmidt(eye) 
-            eye, norm = self.normalization(eye)
+            eye = self.gram_schmidt(eye)
+            _, norm = self.normalization(eye)
             for i in range(0, self.len_var):
-                Lya_Spec[i] = (Lya_Spec[i] * (kase*self.time_delta) + torch.log(norm[i])) / ((kase + 1)*self.time_delta)
-            
+                Lya_Spec[i] = (Lya_Spec[i] * self.time_sequ[kase] + torch.log(norm[i])) / (self.time_sequ[kase] + self.time_delta)
+                
         print(len(self.time_sequ), len(self.time_sequ))
-        return Lya_Spec
+        return Lya_Spec, input_x
+        #return output_x
 
 
 

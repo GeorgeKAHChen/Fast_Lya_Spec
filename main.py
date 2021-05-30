@@ -88,15 +88,14 @@ class Multi_init_FLS(nn.Module):
         #print(len(Block), len(Block[0]), Block[0][0].size())
 
         print("Jacobian and Lyapunov Spectrum computing")
-        Block = self.Lya_Spec(input_x)
-        print(len(Block), Block[0].size())
+        Block, val_next = self.Lya_Spec(input_x)
 
         for kase in range(0, len(Block)):
             Block[kase] = torch.mean(Block[kase])
-
+            
         print(Block)
 
-        return Block
+        return Block, val_next
 
 
 
@@ -123,6 +122,7 @@ def main():
     # =======================================================
     
     # Generate initial values
+    print(f, Jf, delta_t, len(initial_val), device)
     model = Multi_init_FLS(f, Jf, sequ_t, delta_t, len(initial_val), device).to(device)
     print(model)
     for kase in range(0, 10):
@@ -130,9 +130,11 @@ def main():
         new_val = []
         for i in range(0, len(initial_val)):
             tensor_vec = []
-            for j in range(0, 100):    
-                tensor_vec.append(random.random())
+            for j in range(0, 1):    
+                #tensor_vec.append(random.random())
+                tensor_vec.append(1.0)
             new_val.append(torch.DoubleTensor(tensor_vec))
+
         initial_val = torch.stack(new_val)
         
         # Calculate the LE
@@ -145,7 +147,7 @@ def main():
 
 
 
-        """
+        
         import numpy as np
         import matplotlib.pyplot as plt
         from scipy.integrate import odeint
@@ -155,10 +157,10 @@ def main():
         y = []
         z = []
         for i in range(0, len(output)):
-            output[i] = output[i].tolist()
-            x.append(output[i][0][0])
-            y.append(output[i][1][0])
-            z.append(output[i][2][0])
+            #output[i] = output[i].tolist()
+            x.append(output[i][0].tolist()[0])
+            y.append(output[i][1].tolist()[0])
+            z.append(output[i][2].tolist()[0])
 
         fig = plt.figure()
         ax = fig.gca(projection="3d")
@@ -166,7 +168,7 @@ def main():
         plt.draw()
         plt.show()
         plt.savefig(str(Init.GetTime()) + ".png")
-        """
+        
     # =======================================================
 
     #print(output)
