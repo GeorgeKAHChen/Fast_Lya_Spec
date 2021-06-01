@@ -8,7 +8,7 @@
     // t_rem should lower than t_max
     // and the time sequence greater than t_rem lower than t_max 
     // will be used to calculate the LE
-    "t_max":100,
+    "t_max":1000,
     "t_rem":99.5,
     "delta_t":1e-2,
     // PARAMETER: group attractor: how long the sub-attractor will be calculate in one loop

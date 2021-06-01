@@ -130,11 +130,11 @@ def main():
         new_val = []
         for i in range(0, len(initial_val)):
             tensor_vec = []
-            for j in range(0, 1):    
-                #tensor_vec.append(random.random())
-                tensor_vec.append(1.0)
+            for j in range(0, 100):
+                tensor_vec.append(random.random())
+                #tensor_vec.append(1.0)
             new_val.append(torch.DoubleTensor(tensor_vec))
-
+            
         initial_val = torch.stack(new_val)
         
         # Calculate the LE
@@ -147,7 +147,7 @@ def main():
 
 
 
-        
+        """
         import numpy as np
         import matplotlib.pyplot as plt
         from scipy.integrate import odeint
@@ -168,7 +168,7 @@ def main():
         plt.draw()
         plt.show()
         plt.savefig(str(Init.GetTime()) + ".png")
-        
+        """
     # =======================================================
 
     #print(output)
