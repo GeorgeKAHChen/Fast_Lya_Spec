@@ -34,14 +34,13 @@ class Lya_Spec(nn.Module):
             line.append([n for n in range(self.len_var)])
             for j in range(0, self.len_var):
                 line[i][j] += i * self.len_var
-            self.gs_table.append([line[i][0], line[i][len(line[i]) - 1]])
         row = []
         for i in range(0, self.len_var):
             tmp = []
             for j in range(0, self.len_var):
                 tmp.append(j * self.len_var + i)
             row.append(tmp)
-
+        self.gs_table = row
         for i in range(0, len(line)):
             for j in range(0, len(row)):
                 self.multi_table.append([line[i], row[j]])
@@ -62,23 +61,22 @@ class Lya_Spec(nn.Module):
 
 
     def gram_schmidt(self, x):
-        x_ret = []
+        beta = [0 for n in range(self.len_jaco)]
         for kase in range(0, self.len_var):
-            alpha = x[self.gs_table[kase][0]: self.gs_table[kase][1]+1]
-            new_alpha = x[self.gs_table[kase][0]: self.gs_table[kase][1]+1]
+            for j in range(0, self.len_var):
+                beta[self.gs_table[kase][j]] = x[self.gs_table[kase][j]]
+
             for i in range(0, kase):
-                beta = x[self.gs_table[i][0]: self.gs_table[i][1]+1]
                 inner_beta = torch.DoubleTensor([0 for n in range(self.size_tensor)])
                 inner_ab = torch.DoubleTensor([0 for n in range(self.size_tensor)])
                 for j in range(0, self.len_var):
-                    inner_beta += beta[j] * beta[j]
-                    inner_ab += beta[j] * alpha[j]
+                    inner_beta += beta[self.gs_table[i][j]] * beta[self.gs_table[i][j]]
+                    inner_ab += beta[self.gs_table[i][j]] * x[self.gs_table[kase][j]]
 
                 for j in range(0, self.len_var):
-                    new_alpha[j] -= (inner_ab/inner_beta) * beta[j]
-            for j in range(0, self.len_var):
-                x_ret.append(new_alpha[j])
-        return x_ret
+                    beta[self.gs_table[kase][j]] -= (inner_ab/inner_beta) * beta[self.gs_table[i][j]]
+
+        return beta
 
 
     def normalization(self, x):
@@ -86,13 +84,14 @@ class Lya_Spec(nn.Module):
         for i in range(0, self.len_var):
             vec = torch.DoubleTensor([0 for n in range(self.size_tensor)])
             for j in range(0, self.len_var):
-                vec += x[i * self.len_var + j] * x[i * self.len_var + j]
+                vec += torch.abs(x[i + j * self.len_var] * x[i + j * self.len_var])
             vec = torch.sqrt(vec)
             norm_para.append(vec)
             for j in range(0, self.len_var):
-                x[i * self.len_var + j] /= vec
+                x[i + j * self.len_var] /= vec
 
         return x, norm_para
+
 
 
 
@@ -117,21 +116,9 @@ class Lya_Spec(nn.Module):
         for kase in range(0, len(input)):
             if kase % 1000 == 0:
                 print(kase, len(input), end = "\r")
-            #print("=========================== eye 1")
-            #print(eye)
-            #print("=========================== inp 1")
-            #print(input[kase])
             eye = self.mat_times(input[kase], eye)
-            #print("=========================== inp*eye")
-            #print(eye)
             eye = self.gram_schmidt(eye) 
-            #print("=========================== gs(eye)")
-            #print(eye)
             eye, norm = self.normalization(eye)
-            #print("=========================== normalization eye")
-            #print(eye)
-            #print("=========================== norm")
-            #print(norm)
             for i in range(0, self.len_var):
                 Lya_Spec[i] = (Lya_Spec[i] * (kase*self.time_delta) + torch.log(norm[i])) / ((kase + 1)*self.time_delta)
         print(len(input), len(input))

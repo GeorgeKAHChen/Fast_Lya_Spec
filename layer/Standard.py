@@ -2,27 +2,31 @@
 #
 #       Fast Lyapunov Spectrum
 #
-#       Lya_Spec_with_Jaco.py
+#       Standard.py
 #
 #==================================================
 
 import torch
 import torch.nn as nn
 
-class Lya_Spec_with_Jaco(nn.Module):
+
+class Standard(nn.Module):
     def __init__(self, 
                 time_delta,
                 len_var,
-                function,
+                Jfunc,
+                func,
+                time_sequ,
                 debug = False,
                 device = "cuda"):
-        super(Lya_Spec_with_Jaco, self).__init__()
+        super(Standard, self).__init__()
         self.time_delta = time_delta
         self.len_var = len_var
         self.debug = debug
         self.device = device
-        self.function = function
-
+        self.func = func
+        self.Jfunc = Jfunc
+        self.time_sequ = time_sequ
         self.len_jaco = 0
         self.size_tensor = 0
         self.multi_table = []
@@ -36,14 +40,13 @@ class Lya_Spec_with_Jaco(nn.Module):
             line.append([n for n in range(self.len_var)])
             for j in range(0, self.len_var):
                 line[i][j] += i * self.len_var
-            self.gs_table.append([line[i][0], line[i][len(line[i]) - 1]])
         row = []
         for i in range(0, self.len_var):
             tmp = []
             for j in range(0, self.len_var):
                 tmp.append(j * self.len_var + i)
             row.append(tmp)
-
+        self.gs_table = row
         for i in range(0, len(line)):
             for j in range(0, len(row)):
                 self.multi_table.append([line[i], row[j]])
@@ -64,23 +67,23 @@ class Lya_Spec_with_Jaco(nn.Module):
 
 
     def gram_schmidt(self, x):
-        x_ret = []
+        beta = [0 for n in range(self.len_jaco)]
         for kase in range(0, self.len_var):
-            alpha = x[self.gs_table[kase][0]: self.gs_table[kase][1]+1]
-            new_alpha = x[self.gs_table[kase][0]: self.gs_table[kase][1]+1]
+            for j in range(0, self.len_var):
+                beta[self.gs_table[kase][j]] = x[self.gs_table[kase][j]]
+
             for i in range(0, kase):
-                beta = x[self.gs_table[i][0]: self.gs_table[i][1]+1]
                 inner_beta = torch.DoubleTensor([0 for n in range(self.size_tensor)])
                 inner_ab = torch.DoubleTensor([0 for n in range(self.size_tensor)])
                 for j in range(0, self.len_var):
-                    inner_beta += beta[j] * beta[j]
-                    inner_ab += beta[j] * alpha[j]
+                    inner_beta += beta[self.gs_table[i][j]] * beta[self.gs_table[i][j]]
+                    inner_ab += beta[self.gs_table[i][j]] * x[self.gs_table[kase][j]]
 
                 for j in range(0, self.len_var):
-                    new_alpha[j] -= (inner_ab/inner_beta) * beta[j]
-            for j in range(0, self.len_var):
-                x_ret.append(new_alpha[j])
-        return x_ret
+                    beta[self.gs_table[kase][j]] -= (inner_ab/inner_beta) * beta[self.gs_table[i][j]]
+
+        return beta
+
 
 
     def normalization(self, x):
@@ -88,21 +91,19 @@ class Lya_Spec_with_Jaco(nn.Module):
         for i in range(0, self.len_var):
             vec = torch.DoubleTensor([0 for n in range(self.size_tensor)])
             for j in range(0, self.len_var):
-                vec += x[i * self.len_var + j] * x[i * self.len_var + j]
+                vec += torch.abs(x[i + j * self.len_var] * x[i + j * self.len_var])
             vec = torch.sqrt(vec)
             norm_para.append(vec)
             for j in range(0, self.len_var):
-                x[i * self.len_var + j] /= vec
+                x[i + j * self.len_var] /= vec
 
         return x, norm_para
 
 
 
     def Jacobian(self, x):
-        Vals = []
-
-        output = self.function(x, self.time_delta)
-        final =[]
+        output = self.Jfunc(x, self.time_delta)
+        final = []
         for i in range(len(output)):
             try:
                 len(output[i])
@@ -111,18 +112,35 @@ class Lya_Spec_with_Jaco(nn.Module):
             else:
                 final.append(output[i])
 
-        Vals.append(final)
-        #print(len(x), len(x))
-        return Vals
+        return [final]
 
 
+
+    def ode4(self, curr_x, curr_t):
+        k1 = self.func(curr_x, curr_t)
+        k2 = []
+        for i in range(0, len(curr_x)):
+            k2.append(curr_x[i] + self.time_delta * 0.5 * k1[i]) 
+        k2 = self.func(k2, curr_t + self.time_delta * 0.5)
+        k3 = []
+        for i in range(0, len(curr_x)):
+            k3.append(curr_x[i] + self.time_delta * 0.5 * k2[i]) 
+        k3 = self.func(k3, curr_t + self.time_delta * 0.5)
+        k4 = []
+        for i in range(0, len(curr_x)):
+            k4.append(curr_x[i] + self.time_delta * k2[i]) 
+        k4 = self.func(k4, curr_t + self.time_delta)
+        new_x = []
+        for i in range(0, len(curr_x)):
+            new_x.append(curr_x[i] + self.time_delta * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) * (1/6)) 
+        return new_x
 
 
 
 
     def forward(self, input):
-        self.len_jaco = len(input[0]) * len(input[0])
-        self.size_tensor = len(input[0][0])
+        self.len_jaco = len(input) * len(input)
+        self.size_tensor = len(input[0])
         self.init_cal_table()
 
         eye = []
@@ -138,17 +156,21 @@ class Lya_Spec_with_Jaco(nn.Module):
         for i in range(0, self.len_var):
             Lya_Spec.append(torch.DoubleTensor([0.0 for n in range(self.size_tensor)]))
         
-        for kase in range(0, len(input)):
+        input_x = input
+        output_x = []
+        for kase in range(0, len(self.time_sequ)):
             if kase % 1000 == 0:
-                print(kase, len(input), end = "\r")
-            Jaco = self.Jacobian(input[kase])[0]
+                print(kase, len(self.time_sequ), end = "\r")
+            input_x = self.ode4(input_x, self.time_sequ[kase])
+            Jaco = self.Jacobian(input_x)[0]
             eye = self.mat_times(Jaco, eye)
-            eye = self.gram_schmidt(eye) 
+            eye = self.gram_schmidt(eye)
             eye, norm = self.normalization(eye)
             for i in range(0, self.len_var):
-                Lya_Spec[i] = (Lya_Spec[i] * (kase*self.time_delta) + torch.log(norm[i])) / ((kase + 1)*self.time_delta)
-        print(len(input), len(input))
-        return Lya_Spec
+                Lya_Spec[i] = (Lya_Spec[i] * self.time_sequ[kase] + torch.log(norm[i])) / (self.time_sequ[kase] + self.time_delta)
+                
+        print(len(self.time_sequ), len(self.time_sequ))
+        return Lya_Spec, input_x
 
 
 
