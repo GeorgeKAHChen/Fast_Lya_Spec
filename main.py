@@ -119,7 +119,7 @@ def main():
     for i in range(0, len(initial_val)):
         tensor_vec = []
         for j in range(0, Group_vals):
-            tmp = random.random()
+            tmp = random.random()+initial_val[i]
             tensor_vec.append(tmp)
             String += str(tmp)
             String += " "

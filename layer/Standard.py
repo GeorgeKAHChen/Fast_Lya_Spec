@@ -165,6 +165,7 @@ class Standard(nn.Module):
             if kase % 100 == 0:
                 tmp = []
                 for i in range(0, len(Lya_Spec)):
+                    #tmp.append(Lya_Spec[i][0].tolist())
                     tmp.append(torch.mean(Lya_Spec[i]).tolist())
                     print(tmp, end = "\r")
             input_x = self.ode4(input_x, self.time_sequ[kase])

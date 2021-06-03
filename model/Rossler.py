@@ -11,7 +11,7 @@ class model():
         self.b = b
         self.c = c
         self.initial_val = [1.0, 1.0, 1.0]
-        self.model_name = "SAMPLE"
+        self.model_name = "Rossler"
         self.information = "(a, b, c) = ("  + str(a) + ", " + str(b) + ", " + str(c) + ")"
 
     def f(self, state, t):  

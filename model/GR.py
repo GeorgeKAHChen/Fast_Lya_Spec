@@ -6,10 +6,10 @@
 #=========================================
 
 class model():
-    def __init__(self,dimension = 7, 
-                      a = 0.32, 
-                      b = 4, 
-                      d = 2, 
+    def __init__(self,dimension = 9,
+                      a = 0.32,
+                      b = 4,
+                      d = 2,
                       epsilon = 0.1):
         self.dimension = dimension
         self.a = a

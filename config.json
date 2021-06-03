@@ -1,7 +1,12 @@
 {
     // Here is the parameter you can change for computing Fast Lya Spec
     // PARAMETER: Import Model
-    "dyn": "model.Rossler",
+    //"dyn": "model.Logistic",
+    //"dyn": "model.Henon",
+    //"dyn": "model.Lorenz",
+    //"dyn": "model.Rossler",
+    "dyn": "model.ExtendRossler",
+    //"dyn": "model.GR",
     //
     // PARAMETER: time t sequence
     // The Initial of t always be 0
@@ -9,7 +14,7 @@
     // and the time sequence greater than t_rem lower than t_max 
     // will be used to calculate the LE
     "t_max":1000,
-    "t_rem":500,
+    "t_rem":50,
     "delta_t":1e-3,
     // PARAMETER: group attractor: how long the sub-attractor will be calculate in one loop
     // = positive int, -1 means infinity
