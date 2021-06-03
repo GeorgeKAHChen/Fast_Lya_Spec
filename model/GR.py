@@ -1,50 +1,55 @@
 #=========================================
 #
-#   Generalized Rossler(GR) System
+#   Generalized Rossler model 
 #
 #
 #=========================================
-import random
-import numpy as np
-from copy import deepcopy
 
-dimension = 7
-a = 0.32
-b = 4
-d = 2
-epsilon = 0.1
-delta_t = 0.0001
-initial_t = 0
-final_t = 10
-model_name = "GR"
-information = "GR" + "(dim, a, b, d, epsilon) = (" + str(dimension) + ", " + str(a) + ", " + str(b)+ ", " + str(d)+ ", " + str(epsilon) + ")"
-
-initial_val = []
-for i in range(0, dimension):
-    initial_val.append(random.random())
-
-Jf_linear = [[0 for n in range(dimension)] for n in range(dimension)]
-Jf_linear[0][0] = a*delta_t + 1
-Jf_linear[0][1] = -delta_t
-for i in range(1, dimension - 1):
-    Jf_linear[i][i-1] = delta_t
-    Jf_linear[i][i] = 1
-    Jf_linear[i][i+1] = - delta_t
+class model():
+    def __init__(self,dimension = 7, 
+                      a = 0.32, 
+                      b = 4, 
+                      d = 2, 
+                      epsilon = 0.1):
+        self.dimension = dimension
+        self.a = a
+        self.b = b
+        self.d = d
+        self.epsilon = epsilon
+        self.initial_val = [1.0 for n in range(self.dimension)]
+        self.model_name = "GR"
+        self.information = "GR" + "(dim, a, b, d, epsilon) = (" + str(dimension) + ", " + str(a) + ", " + str(b)+ ", " + str(d)+ ", " + str(epsilon) + ")"
+        self.Jf_linear = []
 
 
+    def f(self, state, t):  
+        vals = []
+        vals.append(self.a * state[0] - state[1])
+        for i in range(1, self.dimension - 1):
+            vals.append(state[i-1] - state[i+1])
+        vals.append(self.epsilon + self.b * state[self.dimension - 1]*(state[self.dimension - 2] - self.d))
+        return vals
 
-def f(state, t):
-    vals = []
-    vals.append(a * state[0] - state[1])
-    for i in range(1, dimension - 1):
-        vals.append(state[i-1] - state[i+1])
-    vals.append(epsilon + b * state[dimension - 1]*(state[dimension - 2] - d))
-    return vals
+    def init_Jf(self, delta_t):
+        self.Jf_linear = [0 for n in range(self.dimension*self.dimension)]
+        self.Jf_linear[0] = self.a*delta_t + 1
+        self.Jf_linear[1] = -delta_t
+        for i in range(1, self.dimension - 1):
+            self.Jf_linear[i * self.dimension + i - 1] = delta_t
+            self.Jf_linear[i * self.dimension + i    ] = 1
+            self.Jf_linear[i * self.dimension + i + 1] = - delta_t
 
+    def Jf(self, state, delta_t):
+        from copy import deepcopy
+        if len(self.Jf_linear) == 0:
+            self.init_Jf(delta_t)
+        Jf_return = deepcopy(self.Jf_linear)
+        Jf_return[(self.dimension - 1) * self.dimension + self.dimension - 2] = self.b * state[self.dimension - 1] * delta_t
+        Jf_return[(self.dimension - 1) * self.dimension + self.dimension - 1] = (self.b * state[self.dimension - 2]-self.d*self.b) * delta_t + 1
+        return Jf_return
+        
+    def call_init(self):
+        return self.initial_val
 
-
-def Jf(state):
-    Jf_return = deepcopy(Jf_linear)
-    Jf_return[dimension - 1][dimension - 2] = b * state[dimension - 1] * delta_t
-    Jf_return[dimension - 1][dimension - 1] = (b * state[dimension - 2]-d*b) * delta_t + 1
-    return np.matrix(Jf_return)
+    def call_info(self):
+        return self.model_name, self.information

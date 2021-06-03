@@ -159,8 +159,14 @@ class Standard(nn.Module):
         input_x = input
         output_x = []
         for kase in range(0, len(self.time_sequ)):
-            if kase % 1000 == 0:
-                print(kase, len(self.time_sequ), end = "\r")
+            if kase % 10000 == 0:
+                print()
+                print(kase, len(self.time_sequ))
+            if kase % 100 == 0:
+                tmp = []
+                for i in range(0, len(Lya_Spec)):
+                    tmp.append(torch.mean(Lya_Spec[i]).tolist())
+                    print(tmp, end = "\r")
             input_x = self.ode4(input_x, self.time_sequ[kase])
             Jaco = self.Jacobian(input_x)[0]
             eye = self.mat_times(Jaco, eye)
@@ -170,7 +176,7 @@ class Standard(nn.Module):
                 Lya_Spec[i] = (Lya_Spec[i] * self.time_sequ[kase] + torch.log(norm[i])) / (self.time_sequ[kase] + self.time_delta)
                 
         print(len(self.time_sequ), len(self.time_sequ))
-        return Lya_Spec, input_x
+        return Lya_Spec
 
 
 

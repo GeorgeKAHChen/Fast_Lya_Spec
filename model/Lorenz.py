@@ -16,11 +16,11 @@ class model():
 
     def f(self, state, t):  
         x, y, z = state 
-        return self.sigma * (y - x), x * (self.rho - z) - y, x * y - self.beta * z
+        return [self.sigma * (y - x), x * (self.rho - z) - y, x * y - self.beta * z]
 
     def Jf(self, state, delta_t):
         x, y, z = state
-        return 1-delta_t*self.sigma, delta_t*self.sigma, 0, delta_t*(self.rho - z), 1-delta_t, -delta_t*x, delta_t*y, delta_t*x, 1-delta_t*self.beta
+        return [1-delta_t*self.sigma, delta_t*self.sigma, 0, delta_t*(self.rho - z), 1-delta_t, -delta_t*x, delta_t*y, delta_t*x, 1-delta_t*self.beta]
 
     def call_init(self):
         return self.initial_val
