@@ -6,11 +6,11 @@
 #=========================================
 
 class model():
-    def __init__(self, a = 0.2, b = 0.2, c = 5.7):
+    def __init__(self, a = 0.2, b = 0.2, c = 6):
         self.a = a
         self.b = b
         self.c = c
-        self.initial_val = [1.0, 1.0, 1.0]
+        self.initial_val = [-1, 0, -1]
         self.model_name = "Rossler"
         self.information = "(a, b, c) = ("  + str(a) + ", " + str(b) + ", " + str(c) + ")"
 

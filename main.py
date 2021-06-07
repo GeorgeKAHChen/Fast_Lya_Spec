@@ -119,7 +119,7 @@ def main():
     for i in range(0, len(initial_val)):
         tensor_vec = []
         for j in range(0, Group_vals):
-            tmp = random.random()+initial_val[i]
+            tmp = random.random()+initial_val[i].tolist()[0]
             tensor_vec.append(tmp)
             String += str(tmp)
             String += " "
@@ -136,7 +136,7 @@ def main():
         for i in range(0, len(initial_val)):     
             String += str(output[i][j])
             String += " "
-        String += " "
+        String += "\n"
     FileName = "Output"
     File = open(FileName, "w")
     File.write(String)

@@ -6,8 +6,8 @@
 #=========================================
 
 class model():
-    def __init__(self,dimension = 9,
-                      a = 0.32,
+    def __init__(self,dimension = 7,
+                      a = 0.30,
                       b = 4,
                       d = 2,
                       epsilon = 0.1):
@@ -16,7 +16,7 @@ class model():
         self.b = b
         self.d = d
         self.epsilon = epsilon
-        self.initial_val = [1.0 for n in range(self.dimension)]
+        self.initial_val = [0.8 for n in range(self.dimension)]
         self.model_name = "GR"
         self.information = "GR" + "(dim, a, b, d, epsilon) = (" + str(dimension) + ", " + str(a) + ", " + str(b)+ ", " + str(d)+ ", " + str(epsilon) + ")"
         self.Jf_linear = []
