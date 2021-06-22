@@ -4,9 +4,9 @@
     //"dyn": "model.Logistic",
     //"dyn": "model.Henon",
     //"dyn": "model.Lorenz",
-    "dyn": "model.Rossler",
+    //"dyn": "model.Rossler",
     //"dyn": "model.ExtendRossler",
-    //"dyn": "model.GR",
+    "dyn": "model.GR",
     //
     // PARAMETER: time t sequence
     // The Initial of t always be 0

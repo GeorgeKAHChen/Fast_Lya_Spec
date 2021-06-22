@@ -128,7 +128,7 @@ class Standard(nn.Module):
         k3 = self.func(k3, curr_t + self.time_delta * 0.5)
         k4 = []
         for i in range(0, len(curr_x)):
-            k4.append(curr_x[i] + self.time_delta * k2[i]) 
+            k4.append(curr_x[i] + self.time_delta * k3[i]) 
         k4 = self.func(k4, curr_t + self.time_delta)
         new_x = []
         for i in range(0, len(curr_x)):

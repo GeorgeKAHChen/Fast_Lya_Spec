@@ -6,7 +6,7 @@
 #=========================================
 
 class model():
-    def __init__(self,dimension = 7,
+    def __init__(self,dimension = 3,
                       a = 0.30,
                       b = 4,
                       d = 2,
